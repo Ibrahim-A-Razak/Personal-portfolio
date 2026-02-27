@@ -114,15 +114,15 @@ document.querySelectorAll('.fade-in').forEach(el => {
 });
 
 // 4. Simple Form Handling (Prevents refresh for demo)
-const contactForm = document.getElementById('contactForm');
+// const contactForm = document.getElementById('contactForm');
 
-if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // Stop the form from actually submitting/reloading
-        alert('Thanks for your message! (This is a demo)');
-        contactForm.reset(); // Clear the form fields
-    });
-}
+// if (contactForm) {
+//     contactForm.addEventListener('submit', (e) => {
+//         e.preventDefault(); // Stop the form from actually submitting/reloading
+//         alert('Thanks for your message! (This is a demo)');
+//         contactForm.reset(); // Clear the form fields
+//     });
+// }
 
 
 /* =========================================
