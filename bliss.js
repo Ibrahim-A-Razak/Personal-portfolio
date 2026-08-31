@@ -1,159 +1,181 @@
-// 1. Sticky Navbar Effect
-// Select the navbar element
-const navbar = document.getElementById('navbar');
-
-// Listen for scroll events on the window
-window.addEventListener('scroll', () => {
-    // If scrolled down more than 50px, add 'scrolled' class
-    if (window.scrollY > 50) {
-        navbar.classList.add('scrolled');
-    } else {
-        // Otherwise remove it
-        navbar.classList.remove('scrolled');
-    }
-});
-
-// --- Counter Animation Logic (Existing Code) ---
-const counters = document.querySelectorAll('.number');
-const speed = 7000;
-
-const animateCounter = (counter) => {
-    const target = +counter.getAttribute('data-target');
-    const updateCount = () => {
-        const count = +counter.innerText;
-        const increment = target / speed;
-
-        if (count < target) {
-            counter.innerText = Math.ceil(count + increment);
-            setTimeout(updateCount, 10);
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // 1. Sticky Navbar
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
         } else {
-            counter.innerText = target.toLocaleString();
+            navbar.classList.remove('scrolled');
         }
+    });
+
+    // 2. Mobile Menu Toggle
+    const menuBtn = document.getElementById('menuBtn');
+    const navLinks = document.getElementById('navLinks');
+    
+    menuBtn.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+        menuBtn.classList.toggle('open');
+    });
+
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.classList.remove('active');
+            menuBtn.classList.remove('open');
+        });
+    });
+
+    // 3. Typing Effect for Hero Subtitle
+    const typedOutput = document.getElementById('typed-output');
+    const words = ["Frontend Developer", "UI/UX Enthusiast", "Creative Coder", "Web Designer"];
+    let wordIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let typingSpeed = 150;
+
+    function typeEffect() {
+        if (!typedOutput) return;
+        
+        const currentWord = words[wordIndex];
+        
+        if (isDeleting) {
+            typedOutput.textContent = currentWord.substring(0, charIndex - 1);
+            charIndex--;
+            typingSpeed = 50;
+        } else {
+            typedOutput.textContent = currentWord.substring(0, charIndex + 1);
+            charIndex++;
+            typingSpeed = 150;
+        }
+
+        if (!isDeleting && charIndex === currentWord.length) {
+            isDeleting = true;
+            typingSpeed = 1500; // Pause at end of word
+        } else if (isDeleting && charIndex === 0) {
+            isDeleting = false;
+            wordIndex = (wordIndex + 1) % words.length;
+            typingSpeed = 500; // Pause before next word
+        }
+
+        setTimeout(typeEffect, typingSpeed);
+    }
+    
+    typeEffect();
+
+    // 4. Scroll Reveal Animations (Intersection Observer)
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px"
     };
-    updateCount();
-};
 
-const observerOptions = {
-    root: null,
-    threshold: 0.1
-};
-
-const observerCallback = (entries, observer) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const counter = entry.target.querySelector('.number') || entry.target;
-            if (counter && counter.getAttribute('data-target') && !counter.classList.contains('animated')) {
-                animateCounter(counter);
-                counter.classList.add('animated');
+    const scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                // Optional: Stop observing after reveal
+                // scrollObserver.unobserve(entry.target);
             }
-        }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.fade-in-up').forEach(el => {
+        scrollObserver.observe(el);
     });
-};
 
-const intersectionObserver = new IntersectionObserver(observerCallback, observerOptions);
+    // 5. Number Counter Animation
+    const counters = document.querySelectorAll('.number');
+    const countObserverOptions = {
+        threshold: 0.5
+    };
 
-const counterItems = document.querySelectorAll('.counter-item');
-if (counterItems.length > 0) {
-    counterItems.forEach(item => intersectionObserver.observe(item));
-} else {
+    const animateCounter = (counter) => {
+        const target = +counter.getAttribute('data-target');
+        const duration = 2000; // Total animation time
+        const frameRate = 1000 / 60; // 60fps
+        const totalFrames = Math.round(duration / frameRate);
+        let currentFrame = 0;
+
+        const updateCounter = () => {
+            currentFrame++;
+            const progress = currentFrame / totalFrames;
+            const currentCount = Math.round(target * progress);
+
+            counter.innerText = currentCount + (target > 10 ? '+' : '');
+
+            if (currentFrame < totalFrames) {
+                requestAnimationFrame(updateCounter);
+            } else {
+                counter.innerText = target + '+';
+            }
+        };
+        
+        updateCounter();
+    };
+
+    const countObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const counter = entry.target;
+                if (!counter.classList.contains('animated')) {
+                    animateCounter(counter);
+                    counter.classList.add('animated');
+                }
+            }
+        });
+    }, countObserverOptions);
+
     counters.forEach(counter => {
-        if (counter.getAttribute('data-target')) {
-            intersectionObserver.observe(counter);
-        }
+        countObserver.observe(counter);
     });
-}
 
-if (!('IntersectionObserver' in window)) {
-    counters.forEach(counter => {
-        if (counter.getAttribute('data-target')) {
-            animateCounter(counter);
-        }
-    });
-}
+    // 6. Lightbox Modal for Hero Avatar
+    const modal = document.getElementById('image-modal');
+    const modalImg = document.getElementById('modal-img');
+    const heroAvatar = document.getElementById('hero-avatar');
+    const closeBtn = document.querySelector('.modal-close');
 
+    if (heroAvatar && modal) {
+        heroAvatar.addEventListener('click', () => {
+            modal.classList.add('show');
+            modalImg.src = heroAvatar.src;
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        });
 
-// 2. Mobile Menu Toggle
-const menuBtn = document.getElementById('menuBtn');
-const navLinks = document.getElementById('navLinks');
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        });
 
-// Toggle the 'active' class on click
-menuBtn.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-    // Change icon based on state (Hamburger vs Close)
-    menuBtn.textContent = navLinks.classList.contains('active') ? '✕' : '☰';
-});
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+                document.body.style.overflow = 'auto';
+            }
+        });
 
-// Close mobile menu when a link is clicked
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-        menuBtn.textContent = '☰';
-    });
-});
-
-// 3. Fade-in Animation on Scroll (Intersection Observer)
-// This is a modern, performant way to detect when elements are on screen
-const observerConfig = {
-    threshold: 0.1 // Trigger when 10% of the element is visible
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            // Add the 'visible' class to trigger CSS transition
-            entry.target.classList.add('visible');
-            // Stop observing once animated (optional, improves performance)
-            observer.unobserve(entry.target);
-        }
-    });
-}, observerOptions);
-
-// Select all elements with 'fade-in' class and start observing them
-document.querySelectorAll('.fade-in').forEach(el => {
-    observer.observe(el);
-});
-
-// 4. Simple Form Handling (Prevents refresh for demo)
-// const contactForm = document.getElementById('contactForm');
-
-// if (contactForm) {
-//     contactForm.addEventListener('submit', (e) => {
-//         e.preventDefault(); // Stop the form from actually submitting/reloading
-//         alert('Thanks for your message! (This is a demo)');
-//         contactForm.reset(); // Clear the form fields
-//     });
-// }
-
-
-/* =========================================
-   HERO AVATAR LIGHTBOX FUNCTIONALITY
-   ========================================= */
-const modal = document.getElementById('image-modal');
-const modalImg = document.getElementById('modal-img');
-const heroAvatar = document.getElementById('hero-avatar');
-const closeBtn = document.querySelector('.modal-close');
-
-// Open modal when hero avatar is clicked
-heroAvatar.addEventListener('click', () => {
-    modal.classList.add('show');
-    modalImg.src = heroAvatar.src;
-});
-
-// Close modal when X is clicked
-closeBtn.addEventListener('click', () => {
-    modal.classList.remove('show');
-});
-
-// Close modal when clicking outside the image
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-        modal.classList.remove('show');
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) {
+                modal.classList.remove('show');
+                document.body.style.overflow = 'auto';
+            }
+        });
     }
-});
 
-// Close modal when Escape key is pressed
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.classList.contains('show')) {
-        modal.classList.remove('show');
-    }
+    // 7. Smooth Scrolling for Anchor Links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                e.preventDefault();
+                targetElement.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
 });
